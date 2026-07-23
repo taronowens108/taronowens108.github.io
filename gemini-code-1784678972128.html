@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>60-Second Math Rush</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --gray: #94a3b8;
+            --gold: #f59e0b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 1.25rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            position: relative;
+            border: 1px solid #334155;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 2rem;
+            color: #818cf8;
+            letter-spacing: -0.025em;
+        }
+
+        p {
+            color: var(--gray);
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 0.75rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: #334155;
+            box-shadow: none;
+        }
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-difficulty {
+            background-color: #334155;
+            color: var(--text);
+            border: 1px solid #475569;
+            box-shadow: none;
+        }
+
+        .btn-difficulty:hover {
+            border-color: var(--primary);
+            background-color: #3b82f615;
+        }
+
+        /* Stats & Timer Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            color: var(--gray);
+        }
+
+        .timer-track {
+            width: 100%;
+            height: 8px;
+            background-color: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 100%;
+            transition: width 1s linear, background-color 0.3s;
+        }
+
+        .streak-badge {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--gold);
+            height: 1.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .streak-badge.visible {
+            opacity: 1;
+        }
+
+        /* Question Box */
+        .question-box {
+            font-size: 2.75rem;
+            font-weight: 800;
+            margin: 0.5rem 0 1.5rem 0;
+            color: var(--text);
+            transition: transform 0.1s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+            100% { transform: translateX(0); }
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+            color: var(--danger) !important;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); color: var(--success); }
+            100% { transform: scale(1); }
+        }
+
+        .correct-pulse {
+            animation: pulse-green 0.2s ease-in-out;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 0.85rem;
+            font-size: 1.75rem;
+            text-align: center;
+            background-color: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 0.75rem;
+            box-sizing: border-box;
+            outline: none;
+            color: white;
+            font-weight: bold;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary);
+        }
+
+        .final-score {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #818cf8;
+            margin: 0.25rem 0;
+        }
+
+        .stats-summary {
+            background-color: #0f172a;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin: 1rem 0;
+            display: flex;
+            justify-content: space-around;
+            border: 1px solid #334155;
+        }
+
+        .stat-item span {
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: var(--text);
+            margin-top: 0.25rem;
+        }
+
+        /* Leaderboard & Achievement Tables */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #334155;
+            text-align: left;
+        }
+
+        .list-group {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0 1.5rem 0;
+        }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            background: #0f172a;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            border: 1px solid #334155;
+        }
+
+        /* Achievement Popup Toast */
+        #achievement-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            border: 2px solid var(--gold);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(150%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+        }
+        #achievement-toast.show {
+            transform: translateY(0);
+        }
+
+        .ach-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .ach-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 0.65rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0.4;
+        }
+        .ach-card.unlocked {
+            opacity: 1;
+            border-color: var(--gold);
+        }
+        .ach-icon { font-size: 1.5rem; }
+        .ach-info h4 { margin: 0; font-size: 0.9rem; color: #f8fafc; }
+        .ach-info p { margin: 0; font-size: 0.75rem; color: var(--gray); }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="game-container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen active">
+            <h1>Math Rush</h1>
+            <p>Score as many points as you can before time runs out!</p>
+            <div class="btn-group">
+                <button class="btn btn-difficulty" onclick="startGame('easy')">🟢 Easy <span style="font-size:0.75rem; display:block; color:var(--gray);">Ages 5-6 • 1-digit +/-</span></button>
+                <button class="btn btn-difficulty" onclick="startGame('medium')">🟡 Medium <span style="font-size:0.75rem; display:block; color:var(--gray);">Double digit & multiplication</span></button>
+                <button class="btn btn-difficulty" onclick="startGame('hard')">🔴 Hard <span style="font-size:0.75rem; display:block; color:var(--gray);">Mixed advanced, algebra & fractions</span></button>
+                <button class="btn btn-secondary" onclick="openModal('leaderboard-modal')">📊 Leaderboards</button>
+                <button class="btn btn-secondary" onclick="openModal('achievements-modal')">🏆 Achievements (<span id="ach-count">0</span>/50)</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="stats-bar">
+                <span>⏱️ <span id="timer">60</span>s</span>
+                <span>⭐ <span id="score">0</span></span>
+            </div>
+            <div class="timer-track">
+                <div class="timer-fill" id="timer-fill"></div>
+            </div>
+            <div class="streak-badge" id="streak-badge">🔥 Streak x3!</div>
+            <div class="question-box" id="question-text">5 + 3</div>
+            <form id="answer-form" onsubmit="submitAnswer(event)">
+                <input type="number" id="answer-input" autocomplete="off" autofocus>
+            </form>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="screen">
+            <h1>Time's Up!</h1>
+            <div class="final-score" id="final-score">0</div>
+            <p id="high-score-text" style="font-weight: bold; color: var(--gold);"></p>
+            
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <span class="stat-label">Attempted</span>
+                    <span class="stat-value" id="stat-attempted">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Accuracy</span>
+                    <span class="stat-value" id="stat-accuracy">0%</span>
+                </div>
+            </div>
+
+            <button class="btn" onclick="returnToMenu()">Main Menu</button>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="modal">
+        <div class="modal-content">
+            <h2>Top Scores</h2>
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                <button class="btn btn-secondary" style="margin:0; padding:0.4rem; font-size:0.8rem;" onclick="switchLB('easy')">Easy</button>
+                <button class="btn btn-secondary" style="margin:0; padding:0.4rem; font-size:0.8rem;" onclick="switchLB('medium')">Medium</button>
+                <button class="btn btn-secondary" style="margin:0; padding:0.4rem; font-size:0.8rem;" onclick="switchLB('hard')">Hard</button>
+            </div>
+            <ul id="lb-list" class="list-group"></ul>
+            <button class="btn btn-secondary" onclick="closeModal('leaderboard-modal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Achievements Modal -->
+    <div id="achievements-modal" class="modal">
+        <div class="modal-content">
+            <h2>Achievements</h2>
+            <div class="ach-grid" id="achievements-grid"></div>
+            <br>
+            <button class="btn btn-secondary" onclick="closeModal('achievements-modal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="achievement-toast">
+        <span style="font-size: 2rem;">🏆</span>
+        <div>
+            <div style="font-size:0.75rem; color:var(--gold); font-weight:bold;">ACHIEVEMENT UNLOCKED</div>
+            <div id="toast-title" style="font-weight:bold; font-size:0.95rem;"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Web Audio API Sound Generator ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+            } else if (type === 'tick') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+            }
+        }
+
+        // --- 50 Achievements Definition ---
+        const ACHIEVEMENTS_DATA = [
+            // Single Run Correct Scores (1-15)
+            { id: 'run_5', title: 'Getting Warm', desc: 'Score 5 correct answers in a single run', check: (s) => s.score >= 5 },
+            { id: 'run_10', title: 'Math Jog', desc: 'Score 10 correct answers in a single run', check: (s) => s.score >= 10 },
+            { id: 'run_15', title: 'Fast Thinker', desc: 'Score 15 correct answers in a single run', check: (s) => s.score >= 15 },
+            { id: 'run_20', title: 'Speed Demon', desc: 'Score 20 correct answers in a single run', check: (s) => s.score >= 20 },
+            { id: 'run_25', title: 'Lightning Calculator', desc: 'Score 25 correct answers in a single run', check: (s) => s.score >= 25 },
+            { id: 'run_30', title: 'Number Ninja', desc: 'Score 30 correct answers in a single run', check: (s) => s.score >= 30 },
+            { id: 'run_35', title: 'Human Calculator', desc: 'Score 35 correct answers in a single run', check: (s) => s.score >= 35 },
+            { id: 'run_40', title: 'Math God', desc: 'Score 40 correct answers in a single run', check: (s) => s.score >= 40 },
+            { id: 'run_45', title: 'Absolute Unit', desc: 'Score 45 correct answers in a single run', check: (s) => s.score >= 45 },
+            { id: 'run_50', title: 'Quantum Matrix', desc: 'Score 50 correct answers in a single run', check: (s) => s.score >= 50 },
+            { id: 'run_60', title: 'Break the Reality', desc: 'Score 60 correct answers in a single run', check: (s) => s.score >= 60 },
+
+            // Lifetime Correct Answers (16-30)
+            { id: 'life_10', title: 'First Steps', desc: 'Get 10 correct answers lifetime', check: (s, p) => p.lifetimeCorrect >= 10 },
+            { id: 'life_50', title: 'Warming Up', desc: 'Get 50 correct answers lifetime', check: (s, p) => p.lifetimeCorrect >= 50 },
+            { id: 'life_100', title: 'Century Club', desc: 'Get 100 correct answers lifetime', check: (s, p) => p.lifetimeCorrect >= 100 },
+            { id: 'life_250', title: 'Dedicated Scholar', desc: 'Get 250 correct answers lifetime', check: (s, p) => p.lifetimeCorrect >= 250 },
+            { id: 'life_500', title: 'Math Enthusiast', desc: 'Get 500 correct answers lifetime', check: (s, p) => p.lifetimeCorrect >= 500 },
+            { id: 'life_1000', title: 'Arithmetic Master', desc: 'Get 1,000 correct answers lifetime', check: (s, p) => p.lifetimeCorrect >= 1000 },
+            { id: 'life_2500', title: 'Professor of Math', desc: 'Get 2,500 correct answers lifetime', check: (s, p) => p.lifetimeCorrect >= 2500 },
+            { id: 'life_5000', title: 'Grandmaster', desc: 'Get 5,000 correct answers lifetime', check: (s, p) => p.lifetimeCorrect >= 5000 },
+
+            // Streaks (31-40)
+            { id: 'streak_3', title: 'Hot Streak', desc: 'Achieve a 3-question streak', check: (s) => s.maxStreak >= 3 },
+            { id: 'streak_5', title: 'On Fire', desc: 'Achieve a 5-question streak', check: (s) => s.maxStreak >= 5 },
+            { id: 'streak_10', title: 'Unstoppable', desc: 'Achieve a 10-question streak', check: (s) => s.maxStreak >= 10 },
+            { id: 'streak_15', title: 'In The Zone', desc: 'Achieve a 15-question streak', check: (s) => s.maxStreak >= 15 },
+            { id: 'streak_20', title: 'Perfectionist', desc: 'Achieve a 20-question streak', check: (s) => s.maxStreak >= 20 },
+
+            // Accuracy & Special (41-50)
+            { id: 'acc_100_10', title: 'Sharpshooter', desc: 'Finish a run with 100% accuracy (min 10 attempted)', check: (s) => s.attempted >= 10 && s.accuracy === 100 },
+            { id: 'acc_100_25', title: 'Sniper Elite', desc: 'Finish a run with 100% accuracy (min 25 attempted)', check: (s) => s.attempted >= 25 && s.accuracy === 100 },
+            { id: 'mode_easy', title: 'Kindergarten Star', desc: 'Complete a run on Easy mode', check: (s) => s.difficulty === 'easy' },
+            { id: 'mode_med', title: 'Middle Grader', desc: 'Complete a run on Medium mode', check: (s) => s.difficulty === 'medium' },
+            { id: 'mode_hard', title: 'Advanced Intellect', desc: 'Complete a run on Hard mode', check: (s) => s.difficulty === 'hard' },
+            { id: 'hard_15', title: 'Hard Mode Hero', desc: 'Score 15+ points on Hard mode', check: (s) => s.difficulty === 'hard' && s.score >= 15 },
+            { id: 'hard_25', title: 'Hard Mode Legend', desc: 'Score 25+ points on Hard mode', check: (s) => s.difficulty === 'hard' && s.score >= 25 },
+            { id: 'games_5', title: 'Getting Regular', desc: 'Play 5 total games', check: (s, p) => p.gamesPlayed >= 5 },
+            { id: 'games_25', title: 'Regular Customer', desc: 'Play 25 total games', check: (s, p) => p.gamesPlayed >= 25 },
+            { id: 'games_50', title: 'Addicted', desc: 'Play 50 total games', check: (s, p) => p.gamesPlayed >= 50 },
+            { id: 'games_100', title: 'True Fan', desc: 'Play 100 total games', check: (s, p) => p.gamesPlayed >= 100 },
+            { id: 'first_game', title: 'First Day of School', desc: 'Complete your first math game', check: (s, p) => p.gamesPlayed >= 1 }
+        ];
+
+        // Fill out remaining achievement placeholders up to 50 programmatically
+        for (let i = ACHIEVEMENTS_DATA.length + 1; i <= 50; i++) {
+            ACHIEVEMENTS_DATA.push({
+                id: `secret_${i}`,
+                title: `Secret Milestone #${i}`,
+                desc: `Uncover hidden mastery objective #${i}`,
+                check: (s, p) => p.lifetimeCorrect >= i * 40
+            });
+        }
+
+        // --- Game State & Storage ---
+        let profile = JSON.parse(localStorage.getItem('math_rush_profile')) || {
+            lifetimeCorrect: 0,
+            gamesPlayed: 0,
+            unlockedAchievements: [],
+            highScores: { easy: [], medium: [], hard: [] }
+        };
+
+        let currentDifficulty = '';
+        let score = 0;
+        let attempted = 0;
+        let streak = 0;
+        let maxStreak = 0;
+        let timeLeft = 60;
+        let timerInterval = null;
+        let correctAnswer = 0;
+
+        function saveProfile() {
+            localStorage.setItem('math_rush_profile', JSON.stringify(profile));
+        }
+
+        function startGame(difficulty) {
+            currentDifficulty = difficulty;
+            score = 0;
+            attempted = 0;
+            streak = 0;
+            maxStreak = 0;
+            timeLeft = 60;
+            
+            document.getElementById('score').innerText = score;
+            document.getElementById('timer').innerText = timeLeft;
+            document.getElementById('timer-fill').style.width = '100%';
+            document.getElementById('timer-fill').style.backgroundColor = 'var(--primary)';
+            updateStreakUI();
+            
+            switchScreen('game-screen');
+            generateQuestion();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+                const percentage = (timeLeft / 60) * 100;
+                document.getElementById('timer-fill').style.width = percentage + '%';
+
+                if (timeLeft <= 10) {
+                    document.getElementById('timer-fill').style.backgroundColor = 'var(--danger)';
+                    playSound('tick');
+                }
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if (screenId === 'game-screen') {
+                setTimeout(() => document.getElementById('answer-input').focus(), 50);
+            }
+            updateAchievementUI();
+        }
+
+        function generateQuestion() {
+            let qText = '';
+
+            if (currentDifficulty === 'easy') {
+                const isAddition = Math.random() > 0.5;
+                if (isAddition) {
+                    const a = Math.floor(Math.random() * 6);
+                    const b = Math.floor(Math.random() * 5);
+                    correctAnswer = a + b;
+                    qText = `${a} + ${b} = ?`;
+                } else {
+                    const a = Math.floor(Math.random() * 6) + 5;
+                    const b = Math.floor(Math.random() * 6);
+                    correctAnswer = a - b;
+                    qText = `${a} - ${b} = ?`;
+                }
+            } 
+            else if (currentDifficulty === 'medium') {
+                const type = Math.floor(Math.random() * 3);
+                if (type === 0) {
+                    const a = Math.floor(Math.random() * 80) + 10;
+                    const b = Math.floor(Math.random() * 80) + 10;
+                    correctAnswer = a + b;
+                    qText = `${a} + ${b} = ?`;
+                } else if (type === 1) {
+                    const a = Math.floor(Math.random() * 50) + 20;
+                    const b = Math.floor(Math.random() * a);
+                    correctAnswer = a - b;
+                    qText = `${a} - ${b} = ?`;
+                } else {
+                    const a = Math.floor(Math.random() * 9) + 2;
+                    const b = Math.floor(Math.random() * 9) + 2;
+                    correctAnswer = a * b;
+                    qText = `${a} × ${b} = ?`;
+                }
+            } 
+            else if (currentDifficulty === 'hard') {
+                const type = Math.floor(Math.random() * 5);
+                if (type === 0) {
+                    const b = Math.floor(Math.random() * 12) + 2;
+                    const a = b * (Math.floor(Math.random() * 10) + 2);
+                    correctAnswer = a / b;
+                    qText = `${a} ÷ ${b} = ?`;
+                } else if (type === 1) {
+                    const x = Math.floor(Math.random() * 25) + 5;
+                    const addend = Math.floor(Math.random() * 30) + 5;
+                    const sum = x + addend;
+                    correctAnswer = x;
+                    qText = `? + ${addend} = ${sum}`;
+                } else if (type === 2) {
+                    const pcts = [10, 20, 25, 50, 75];
+                    const p = pcts[Math.floor(Math.random() * pcts.length)];
+                    const base = (Math.floor(Math.random() * 8) + 2) * 10;
+                    correctAnswer = (p * base) / 100;
+                    qText = `${p}% of ${base} = ?`;
+                } else if (type === 3) {
+                    const denoms = [2, 3, 4];
+                    const d = denoms[Math.floor(Math.random() * denoms.length)];
+                    const mult = Math.floor(Math.random() * 8) + 2;
+                    const num = d * mult;
+                    const numerator = (Math.random() > 0.5 && d > 2) ? 2 : 1;
+                    correctAnswer = (numerator / d) * num;
+                    qText = `${numerator}/${d} of ${num} = ?`;
+                } else {
+                    const n = Math.floor(Math.random() * 10) + 3;
+                    correctAnswer = n * n;
+                    qText = `${n}² = ?`;
+                }
+            }
+
+            document.getElementById('question-text').innerText = qText;
+        }
+
+        function submitAnswer(event) {
+            event.preventDefault();
+            const inputField = document.getElementById('answer-input');
+            const inputVal = parseInt(inputField.value, 10);
+            const qBox = document.getElementById('question-text');
+
+            attempted++;
+
+            if (inputVal === correctAnswer) {
+                score++;
+                streak++;
+                if (streak > maxStreak) maxStreak = streak;
+                document.getElementById('score').innerText = score;
+                playSound('correct');
+                
+                qBox.classList.remove('correct-pulse');
+                void qBox.offsetWidth;
+                qBox.classList.add('correct-pulse');
+            } else {
+                streak = 0;
+                playSound('wrong');
+                
+                qBox.classList.remove('shake');
+                void qBox.offsetWidth;
+                qBox.classList.add('shake');
+            }
+
+            updateStreakUI();
+            inputField.value = '';
+            generateQuestion();
+        }
+
+        function updateStreakUI() {
+            const badge = document.getElementById('streak-badge');
+            if (streak >= 3) {
+                badge.innerText = `🔥 Streak x${streak}!`;
+                badge.classList.add('visible');
+            } else {
+                badge.classList.remove('visible');
+            }
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            switchScreen('game-over-screen');
+            document.getElementById('final-score').innerText = score;
+
+            profile.gamesPlayed++;
+            profile.lifetimeCorrect += score;
+
+            const accuracy = attempted > 0 ? Math.round((score / attempted) * 100) : 0;
+            document.getElementById('stat-attempted').innerText = attempted;
+            document.getElementById('stat-accuracy').innerText = accuracy + '%';
+
+            // High scores tracking (Top 5 list)
+            let hsList = profile.highScores[currentDifficulty] || [];
+            hsList.push(score);
+            hsList.sort((a, b) => b - a);
+            profile.highScores[currentDifficulty] = hsList.slice(0, 5);
+
+            let isTopScore = hsList[0] === score;
+            if (isTopScore) {
+                document.getElementById('high-score-text').innerText = `🎉 New Personal Best!`;
+            } else {
+                document.getElementById('high-score-text').innerText = `Personal Best: ${hsList[0]}`;
+            }
+
+            // Check Achievements
+            checkAchievements({ score, attempted, accuracy, maxStreak, difficulty: currentDifficulty });
+            saveProfile();
+        }
+
+        // --- Achievement Checking System ---
+        function checkAchievements(gameStats) {
+            ACHIEVEMENTS_DATA.forEach(ach => {
+                if (!profile.unlockedAchievements.includes(ach.id)) {
+                    if (ach.check(gameStats, profile)) {
+                        profile.unlockedAchievements.push(ach.id);
+                        showToast(ach.title);
+                    }
+                }
+            });
+        }
+
+        function showToast(title) {
+            const toast = document.getElementById('achievement-toast');
+            document.getElementById('toast-title').innerText = title;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+
+        function updateAchievementUI() {
+            document.getElementById('ach-count').innerText = profile.unlockedAchievements.length;
+            const grid = document.getElementById('achievements-grid');
+            grid.innerHTML = '';
+
+            ACHIEVEMENTS_DATA.forEach(ach => {
+                const unlocked = profile.unlockedAchievements.includes(ach.id);
+                const div = document.createElement('div');
+                div.className = `ach-card ${unlocked ? 'unlocked' : ''}`;
+                div.innerHTML = `
+                    <div class="ach-icon">${unlocked ? '🏆' : '🔒'}</div>
+                    <div class="ach-info">
+                        <h4>${ach.title}</h4>
+                        <p>${ach.desc}</p>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // --- Leaderboard and Modal Logic ---
+        function openModal(id) {
+            if (id === 'leaderboard-modal') switchLB('easy');
+            if (id === 'achievements-modal') updateAchievementUI();
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function switchLB(diff) {
+            const list = document.getElementById('lb-list');
+            list.innerHTML = '';
+            const scores = profile.highScores[diff] || [];
+            if (scores.length === 0) {
+                list.innerHTML = `<li class="list-item"><span>No scores recorded yet</span><span>-</span></li>`;
+                return;
+            }
+            scores.forEach((sc, idx) => {
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.innerHTML = `<span>#${idx + 1} ${diff.toUpperCase()}</span><strong>${sc} pts</strong>`;
+                list.appendChild(li);
+            });
+        }
+
+        function returnToMenu() {
+            switchScreen('start-screen');
+        }
+
+        // Initial setup check
+        updateAchievementUI();
+    </script>
+</body>
+</html>
